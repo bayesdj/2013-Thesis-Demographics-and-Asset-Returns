@@ -1,0 +1,57 @@
+data A1;
+	set S.Popall;
+	if Year < 1940 then do;
+		if missing(Age) then Age = 75;
+	end;
+	else if Year < 1980 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if Year < 2000 then do;
+		if missing(Age) then Age = 100;
+	end;
+	else if Year < 2010 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if missing(Age) then Age = 100;
+run;
+
+data A2;
+	set A1;
+	if Age > 85 then Age = 85;
+run;
+
+proc sql;
+	create table A3 as
+	select Year, Age, sum(Pop) as Pop
+	from A2
+	where (Year >= 1940 and Year < 2013 and Age >= 21)
+	group by Year, Age;
+	
+	create table A4 as
+	select a.*, b.PV
+	from A3 as a
+	left join S.PV as b
+	on a.Age = b.Age
+	order by Year, Age;
+quit;
+
+data A5;
+	set A4;
+	agePV = Pop*PV;
+run;
+
+proc sql;
+	create table A6 as 
+	select Year, sum(Pop)*max(PV) as yPVmax, sum(agePV) as yPV
+	from A5
+	group by Year;
+quit;
+
+data A7;
+	set A6;
+	pvAvg = yPV/Pop;
+run;
+
+proc gplot data=A7;
+ plot pvAvg*Year;
+run;

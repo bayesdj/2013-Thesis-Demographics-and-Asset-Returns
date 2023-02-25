@@ -1,0 +1,209 @@
+data A1;
+	set S.Popall;
+	if Year < 1940 then do;
+		if missing(Age) then Age = 75;
+	end;
+	else if Year < 1980 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if Year < 2000 then do;
+		if missing(Age) then Age = 100;
+	end;
+	else if Year < 2010 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if missing(Age) then Age = 100;
+run;
+
+proc sql;
+	create table Y as
+	select Year, sum(Pop) as py
+	from A1
+	where (Age >= 20 and Age <=29)
+	group by Year;
+	
+	create table M as
+	select Year, sum(Pop) as pm
+	from A1
+	where (Age >= 40 and Age <=49)
+	group by Year;
+	
+	create table Y1 as
+	select Year, sum(Pop) as py1
+	from A1
+	where (Age >= 19 and Age <=28)
+	group by Year;
+	
+	create table M1 as
+	select Year, sum(Pop) as pm1
+	from A1
+	where (Age >= 39 and Age <=48)
+	group by Year;
+	
+	create table Y2 as
+	select Year, sum(Pop) as py2
+	from A1
+	where (Age >= 18 and Age <=27)
+	group by Year;
+	
+	create table M2 as
+	select Year, sum(Pop) as pm2
+	from A1
+	where (Age >= 38 and Age <=47)
+	group by Year;
+	
+	create table Y3 as
+	select Year, sum(Pop) as py3
+	from A1
+	where (Age >= 17 and Age <=26)
+	group by Year;
+	
+	create table M3 as
+	select Year, sum(Pop) as pm3
+	from A1
+	where (Age >= 37 and Age <=46)
+	group by Year;
+	
+	create table Y4 as
+	select Year, sum(Pop) as py4
+	from A1
+	where (Age >= 16 and Age <=25)
+	group by Year;
+	
+	create table M4 as
+	select Year, sum(Pop) as pm4
+	from A1
+	where (Age >= 36 and Age <=45)
+	group by Year;	
+
+	create table Y5 as
+	select Year, sum(Pop) as py5
+	from A1
+	where (Age >= 15 and Age <=24)
+	group by Year;
+	
+	create table M5 as
+	select Year, sum(Pop) as pm5
+	from A1
+	where (Age >= 35 and Age <=44)
+	group by Year;	
+		
+	create table Y6 as
+	select Year, sum(Pop) as py6
+	from A1
+	where (Age >= 14 and Age <=23)
+	group by Year;
+	
+	create table M6 as
+	select Year, sum(Pop) as pm6
+	from A1
+	where (Age >= 34 and Age <=43)
+	group by Year;
+		
+	create table Y7 as
+	select Year, sum(Pop) as py7
+	from A1
+	where (Age >= 13 and Age <=22)
+	group by Year;
+	
+	create table M7 as
+	select Year, sum(Pop) as pm7
+	from A1
+	where (Age >= 33 and Age <=42)
+	group by Year;
+	
+	create table Y8 as
+	select Year, sum(Pop) as py8
+	from A1
+	where (Age >= 12 and Age <=21)
+	group by Year;
+	
+	create table M8 as
+	select Year, sum(Pop) as pm8
+	from A1
+	where (Age >= 32 and Age <=41)
+	group by Year;
+		
+	create table Y9 as
+	select Year, sum(Pop) as py9
+	from A1
+	where (Age >= 11 and Age <=20)
+	group by Year;
+	
+	create table M9 as
+	select Year, sum(Pop) as pm9
+	from A1
+	where (Age >= 31 and Age <=40)
+	group by Year;
+		
+	create table Y10 as
+	select Year, sum(Pop) as py10
+	from A1
+	where (Age >= 10 and Age <=19)
+	group by Year;
+	
+	create table M10 as
+	select Year, sum(Pop) as pm10
+	from A1
+	where (Age >= 30 and Age <=39)
+	group by Year;
+quit;
+
+data my0;
+	merge M Y;
+	my = pm/py;
+	by Year;
+data my1;
+	merge M1 Y1;
+	my1 = pm1/py1;
+	by Year;
+data my2;
+	merge M2 Y2;
+	my2 = pm2/py2;
+	by Year;
+data my3;
+	merge M3 Y3;
+	my3 = pm3/py3;
+	by Year;
+data my4;
+	merge M4 Y4;
+	my4 = pm4/py4;
+	by Year;
+data my5;
+	merge M5 Y5;
+	my5 = pm5/py5;
+	by Year;
+data my6;
+	merge M6 Y6;
+	my6 = pm6/py6;
+	by Year;
+data my7;
+	merge M7 Y7;
+	my7 = pm7/py7;
+	by Year;
+data my8;
+	merge M8 Y8;
+	my8 = pm8/py8;
+	by Year;
+data my9;
+	merge M9 Y9;
+	my9 = pm9/py9;
+	by Year;
+data my10;
+	merge M10 Y10;
+	my10 = pm10/py10;
+	by Year;
+run;
+
+data myAll;
+	merge my0-my10;
+	by Year;
+	keep Year my my1-my10;
+run;
+	
+proc export
+	data = myAll
+	dbms = csv
+	outfile = 'C:\Users\Jack\Dropbox\Pop.csv'
+	replace;
+quit;

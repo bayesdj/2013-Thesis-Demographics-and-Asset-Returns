@@ -1,0 +1,71 @@
+data A1;
+	set S.Popall;
+	if Year < 1940 then do;
+		if missing(Age) then Age = 75;
+	end;
+	else if Year < 1980 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if Year < 2000 then do;
+		if missing(Age) then Age = 100;
+	end;
+	else if Year < 2010 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if missing(Age) then Age = 100;
+run;
+
+proc sql;
+	create table pAll as
+	select Year, sum(Pop) as pAll
+	from A1
+	group by Year;
+	
+	create table p2024 as
+	select Year, sum(Pop) as p2024
+	from A1
+	where (Age >= 20 and Age <= 24)
+	group by Year;	
+	
+	create table p2534 as
+	select Year, sum(Pop) as p2534
+	from A1
+	where (Age >= 25 and Age <= 34)
+	group by Year;	
+	
+	create table p3544 as
+	select Year, sum(Pop) as p3544
+	from A1
+	where (Age >= 35 and Age <= 44)
+	group by Year;	
+	
+	create table p4554 as
+	select Year, sum(Pop) as p4554
+	from A1
+	where (Age >= 45 and Age <= 54)
+	group by Year;	
+	
+	create table p5564 as
+	select Year, sum(Pop) as p5564
+	from A1
+	where (Age >= 55 and Age <= 64)
+	group by Year;	
+	
+	create table p65 as
+	select Year, sum(Pop) as p65
+	from A1
+	where (Age >= 65)
+	group by Year;	
+quit;
+
+data A2;
+	merge pAll p2024 p2534 p3544 p4554 p5564 p65;
+	by Year;
+run;
+
+proc export
+	data = A2
+	dbms = csv
+	outfile = 'C:\Users\Jack\Dropbox\Pop.csv'
+	replace;
+quit;

@@ -1,0 +1,159 @@
+data Pop;
+	set S.Popall;
+	if Year < 1940 then do;
+		if missing(Age) then Age = 75;
+	end;
+	else if Year < 1980 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if Year < 2000 then do;
+		if missing(Age) then Age = 100;
+	end;
+	else if Year < 2010 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if missing(Age) then Age = 100;
+
+data Pop;
+	set Pop;
+	prod = age*pop;
+run;
+
+proc sql;
+	create table total as
+	select year, sum(pop) as pop
+	from pop
+	group by year;
+
+	create table T4064 as
+	select year, sum(pop) as p4064
+	from pop
+	where age >= 40 and age <= 64
+	group by year;
+
+	create table T2064 as
+	select year, sum(pop) as p2064
+	from pop
+	where age >= 20 and age <= 64
+	group by year;
+	
+	create table T65 as
+	select year, sum(pop) as p65
+	from pop
+	where age >= 65
+	group by year;
+
+	create table T20 as
+	select year, sum(pop) as p20
+	from pop
+	where age >= 20
+	group by year;
+	
+	create table T20s as
+	select year, sum(pop) as p20s
+	from pop
+	where age >= 20 and age <= 29
+	group by year;
+
+	create table T40s as
+	select year, sum(pop) as p40s
+	from pop
+	where age >= 40 and age <= 49
+	group by year;
+	
+	create table prod20 as
+	select year, sum(prod) as prod
+	from pop
+	where age >= 20
+	group by year;
+quit;
+
+proc sql;
+	create table pop1 as
+	select A.*, B.pop as total
+	from Pop as A
+	left join Total as B
+	on A.Year = B.year
+	order by Year, AGe;
+quit;
+
+data pop2;
+	set pop1;
+	ratio = pop/total;
+
+data pop3;
+	set pop2;
+	by year;
+	retain cdf;
+	if first.Year then cdf = ratio;
+	else cdf = cdf+ratio;
+
+data pop4;
+	set pop3;
+	lag1 = lag(cdf);
+	if cdf < 0.5 then count = 1;
+	else if lag1 < 0.5 then count = (0.5-lag1)/(cdf-lag1);
+	else count = 0;
+run;
+
+proc sql;
+	create table median as 
+	select year, sum(count) as median
+	from pop4
+	group by year;
+quit;
+
+data uavg20;
+	merge Prod20 T20;
+	by Year;
+	avg20 = prod / p20;
+	keep year avg20;
+data uMY;
+	merge T20s T40s;
+	by Year;
+	my = p40s / p20s;
+	keep year my;
+data u2064;
+	merge T2064 Total;
+	by year;
+	s2064 = p2064 / pop;
+	keep year s2064;
+data u4064;
+	merge T4064 Total;
+	by year;
+	s4064 = p4064 / pop;
+	keep year s4064;
+data u65;
+	merge T65 Total;
+	by year;
+	s65 = p65 / pop;
+	keep year s65;	
+data u406420;
+	merge T4064 T20;
+	by year;
+	s406420 = p4064 / p20;
+	keep year s406420;	
+data u6520;
+	merge T65 T20;
+	by year;
+	s6520 = p65 / p20;
+	keep year s6520;	
+data uDependRatio;
+	merge T65 T2064 Total;
+	by year;
+	dependOld = p65 / p2064;
+	depend = (pop-p2064) / p2064;
+	keep year dependOld depend;
+run;
+
+data uAll;
+	merge u4064 u65 u406420 u6520 uavg20 median u2064 uMY uDependRatio;
+	by Year;
+run;
+
+proc export
+	data = uAll
+	dbms = csv
+	outfile = 'C:\Users\Jack\Dropbox\uAll.csv'
+	replace;
+quit;

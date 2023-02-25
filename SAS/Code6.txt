@@ -1,0 +1,43 @@
+data A1;
+	set S.Popall;
+	if Year < 1940 then do;
+		if missing(Age) then Age = 75;
+	end;
+	else if Year < 1980 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if Year < 2000 then do;
+		if missing(Age) then Age = 100;
+	end;
+	else if Year < 2010 then do;
+		if missing(Age) then Age = 85;
+	end;
+	else if missing(Age) then Age = 100;
+run;
+
+proc sql;
+	create table Young as
+	select Year, sum(Pop) as pyoung
+	from A1
+	where (Age >= 20 and Age <=39)
+	group by Year;
+	
+	create table mid as
+	select Year, sum(Pop) as pmid
+	from A1
+	where (Age >= 40 and Age <=59)
+	group by Year;	
+quit;
+
+data A2;
+	merge young mid;
+	my = pmid/pyoung;
+	by Year;
+run;
+	
+proc export
+	data = A2
+	dbms = csv
+	outfile = 'C:\Users\Jack\Dropbox\Pop.csv'
+	replace;
+quit;

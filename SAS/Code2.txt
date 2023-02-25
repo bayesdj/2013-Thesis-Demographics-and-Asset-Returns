@@ -1,0 +1,29 @@
+data mine1;
+	set mine;
+	rename _FF=FF _Bond=Bond _Both=Both;
+	format _FF _Bond _Both percent7.2;
+run;
+
+proc sql;
+	create table byk0 as
+	select k0, avg(FF) as FF, avg(Bond) as Bond, avg(Both) as Both
+	from Mine1
+	group by k0;
+quit;
+
+data byk0;
+	set byk0;
+	format FF Bond Both percent7.2;
+run;
+
+proc sql;
+	create table byL as
+	select l as lag, avg(FF) as FF, avg(Bond) as Bond, avg(Both) as Both
+	from Mine1
+	group by l;
+quit;
+
+data byL;
+	set byL;
+	format FF Bond Both percent7.2;
+run;
